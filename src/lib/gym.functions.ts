@@ -3,65 +3,16 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fromMinorUnits, toMinorUnits } from "@/lib/currency";
 
-const phoneSchema = z.string().trim().regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number");
-
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin;
 }
 
-/* ---------------- Phone OTP (MSG91) ---------------- */
-
-export const sendPhoneOtp = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: { phone: string }) => z.object({ phone: phoneSchema }).parse(d))
-  .handler(async ({ data }) => {
-    const key = process.env["MSG91_AUTH_KEY"];
-    const template = process.env["MSG91_OTP_TEMPLATE_ID"];
-    if (!key || !template) throw new Error("SMS verification is not set up yet. Please contact the gym.");
-    const res = await fetch(
-      `https://control.msg91.com/api/v5/otp?template_id=${encodeURIComponent(template)}&mobile=91${data.phone}&otp_length=6&otp_expiry=10`,
-      { method: "POST", headers: { authkey: key, "content-type": "application/json" }, body: "{}" },
-    );
-    const body = (await res.json().catch(() => ({}))) as { type?: string; message?: string };
-    if (!res.ok || body.type === "error") throw new Error(body.message || "Could not send the code. Try again.");
-    return { sent: true };
-  });
-
-export const verifyPhoneOtp = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: { phone: string; otp: string }) =>
-    z.object({ phone: phoneSchema, otp: z.string().regex(/^\d{4,6}$/, "Enter the code") }).parse(d),
-  )
-  .handler(async ({ data, context }) => {
-    // Allow test bypass code while TRAI DLT registration is pending
-    const isTestOtp = data.otp === "812050";
-
-    if (!isTestOtp) {
-      const key = process.env["MSG91_AUTH_KEY"];
-      if (!key) throw new Error("SMS verification is not set up yet.");
-      const res = await fetch(
-        `https://control.msg91.com/api/v5/otp/verify?otp=${data.otp}&mobile=91${data.phone}`,
-        { headers: { authkey: key } },
-      );
-      const body = (await res.json().catch(() => ({}))) as { type?: string; message?: string };
-      if (!res.ok || body.type !== "success") throw new Error(body.message || "Incorrect or expired code.");
-    }
-
-    const db = await admin();
-    const { error } = await db
-      .from("profiles")
-      .update({ phone: data.phone, phone_verified_at: new Date().toISOString() })
-      .eq("id", context.userId);
-    if (error) throw new Error(error.message);
-    return { verified: true };
-  });
-
-
 /* ---------------- Profile completion ---------------- */
 
 const profileSchema = z.object({
   display_name: z.string().trim().min(2, "Enter your full name").max(100),
+  phone: z.string().trim().max(30).optional().default(""),
   address: z.string().trim().min(5, "Enter your address").max(500),
   gender: z.enum(["male", "female", "other"]),
   has_illness: z.boolean(),
@@ -73,10 +24,9 @@ export const completeProfile = createServerFn({ method: "POST" })
   .inputValidator((d: z.input<typeof profileSchema>) => profileSchema.parse(d))
   .handler(async ({ data, context }) => {
     const db = await admin();
-    const { data: p } = await db.from("profiles").select("phone_verified_at").eq("id", context.userId).single();
-    if (!p?.phone_verified_at) throw new Error("Please verify your phone number first.");
     const { error } = await db.from("profiles").update({
       ...data,
+      phone: data.phone || null,
       medical_notes: data.has_illness ? data.medical_notes || null : null,
       onboarding_completed: true,
     }).eq("id", context.userId);
