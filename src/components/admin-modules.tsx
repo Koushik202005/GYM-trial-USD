@@ -13,6 +13,52 @@ export function PlansAdmin() {
   const plans = useQuery({ queryKey: ["admin-plans"], queryFn: async () => (await supabase.from("membership_plans").select("*").order("price_amount")).data ?? [] });
   const coupons = useQuery({ queryKey: ["admin-coupons"], queryFn: async () => (await supabase.from("coupons").select("*, membership_plans(name)").order("created_at", { ascending: false })).data ?? [] });
   const [err, setErr] = useState("");
+  const [planErr, setPlanErr] = useState("");
+  const [planMessage, setPlanMessage] = useState("");
+  const [addingPlan, setAddingPlan] = useState(false);
+
+  async function addPlan(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const values = new FormData(form);
+    const name = String(values.get("planName") ?? "").trim();
+    const price = Number(values.get("planPrice"));
+    const joiningFee = Number(values.get("planFee") || 0);
+    const durationDays = Number(values.get("planDays"));
+    const freezeDays = Number(values.get("freezeDays") || 0);
+    if (!name || !Number.isFinite(price) || price < 0 || !Number.isFinite(joiningFee) || joiningFee < 0 || !Number.isInteger(durationDays) || durationDays < 1 || !Number.isInteger(freezeDays) || freezeDays < 0) {
+      setPlanErr("Enter a name, valid prices, and a duration of at least one day.");
+      return;
+    }
+
+    setAddingPlan(true);
+    setPlanErr("");
+    setPlanMessage("");
+    try {
+      const benefits = String(values.get("planBenefits") ?? "")
+        .split(/\r?\n/)
+        .map((benefit) => benefit.trim())
+        .filter(Boolean);
+      const { error } = await supabase.from("membership_plans").insert({
+        name,
+        description: String(values.get("planDescription") ?? "").trim() || null,
+        price_amount: price,
+        joining_fee_amount: joiningFee,
+        duration_days: durationDays,
+        freeze_days: freezeDays,
+        benefits,
+        active: true,
+      });
+      if (error) throw new Error(error.message);
+      form.reset();
+      setPlanMessage("Membership plan added.");
+      await qc.invalidateQueries({ queryKey: ["admin-plans"] });
+    } catch (error) {
+      setPlanErr(error instanceof Error ? error.message : "Could not add the membership plan.");
+    } finally {
+      setAddingPlan(false);
+    }
+  }
 
   async function addCoupon(e: FormEvent<HTMLFormElement>) {
     e.preventDefault(); setErr(""); const f = new FormData(e.currentTarget); const form = e.currentTarget;
@@ -25,7 +71,21 @@ export function PlansAdmin() {
   }
 
   return <div className="space-y-6">
-    <section className="panel p-5"><h2 className="section-title">Membership pricing</h2><p className="section-subtitle">Changes apply to new purchases and renewals immediately.</p>
+    <section className="panel p-5"><h2 className="section-title">Membership pricing</h2><p className="section-subtitle">Add plans or edit existing ones. Changes apply to new purchases and renewals immediately.</p>
+      <form onSubmit={addPlan} className="mt-5 rounded-md border border-border bg-muted/20 p-4">
+        <h3 className="text-sm font-semibold">Add membership plan</h3>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <label><span className="form-label">Plan name</span><input name="planName" required minLength={2} maxLength={100} placeholder="e.g. Monthly Plus" className="form-input" /></label>
+          <label><span className="form-label">Price ({currency})</span><input name="planPrice" type="number" required min={0} step="0.01" placeholder="0.00" className="form-input" /></label>
+          <label><span className="form-label">Joining fee ({currency})</span><input name="planFee" type="number" min={0} step="0.01" defaultValue={0} className="form-input" /></label>
+          <label><span className="form-label">Duration (days)</span><input name="planDays" type="number" required min={1} step={1} placeholder="30" className="form-input" /></label>
+          <label><span className="form-label">Freeze days</span><input name="freezeDays" type="number" min={0} step={1} defaultValue={0} className="form-input" /></label>
+          <label className="sm:col-span-2 lg:col-span-3"><span className="form-label">Description (optional)</span><input name="planDescription" maxLength={500} placeholder="Short description for members" className="form-input" /></label>
+          <label className="sm:col-span-2 lg:col-span-4"><span className="form-label">Benefits (optional, one per line)</span><textarea name="planBenefits" rows={2} maxLength={2000} placeholder={"Unlimited classes\nOpen gym access"} className="form-input h-auto py-2" /></label>
+        </div>
+        {(planErr || planMessage) && <p role={planErr ? "alert" : "status"} className={`mt-3 text-sm ${planErr ? "text-destructive" : "text-success"}`}>{planErr || planMessage}</p>}
+        <div className="mt-3 flex justify-end"><Button disabled={addingPlan}>{addingPlan ? <Loader2 className="animate-spin" size={16} /> : <Plus size={16} />}Add plan</Button></div>
+      </form>
       <div className="mt-4 space-y-3">{plans.data?.map(p=><PlanRow key={p.id} plan={p} currency={currency} onSaved={()=>qc.invalidateQueries({queryKey:["admin-plans"]})}/>)}</div>
     </section>
     <section className="panel p-5"><h2 className="section-title">Discount coupons</h2><p className="section-subtitle">Members enter these codes at checkout.</p>
