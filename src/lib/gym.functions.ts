@@ -8,6 +8,14 @@ async function admin() {
   return supabaseAdmin;
 }
 
+function gymShortCode(gymName?: string | null) {
+  const normalizedName = gymName === "Forge Functional Fitness" ? "GYM MANAGER" : gymName;
+  const words = normalizedName?.toUpperCase().match(/[A-Z0-9]+/g) ?? [];
+  if (words.length === 0) return "GYM";
+  if (words.length === 1) return words[0]!.slice(0, 3);
+  return words.map((word) => word[0]).join("").slice(0, 6) || "GYM";
+}
+
 /* ---------------- Profile completion ---------------- */
 
 const profileSchema = z.object({
@@ -87,14 +95,14 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
     const keyId = process.env["RAZORPAY_KEY_ID"]; const secret = process.env["RAZORPAY_KEY_SECRET"];
     if (!keyId || !secret) throw new Error("Online payments are not switched on yet. Please pay at the front desk or try again later.");
     const db = await admin();
-    const { data: gym } = await db.from("gym_settings").select("country_code, currency, payment_gateway").limit(1).maybeSingle();
+    const { data: gym } = await db.from("gym_settings").select("gym_name, country_code, currency, payment_gateway").order("updated_at", { ascending: false }).limit(1).maybeSingle();
     if (gym?.payment_gateway !== "razorpay" || gym.country_code !== "IN" || gym.currency !== "INR") throw new Error("Razorpay checkout requires India and INR and must be selected in Gym Settings.");
     const { data: profile } = await db.from("profiles").select("onboarding_completed, display_name, email, phone").eq("id", context.userId).single();
     if (!profile?.onboarding_completed) throw new Error("Complete your profile first.");
     const { data: member } = await db.from("members").select("id").eq("profile_id", context.userId).single();
     if (!member) throw new Error("Member record not found.");
     const q = await buildQuote(db, context.userId, data.planId, data.coupon);
-    const receipt = `FRG${Date.now()}`;
+    const receipt = `${gymShortCode(gym.gym_name)}${Date.now()}`;
     const res = await fetch("https://api.razorpay.com/v1/orders", {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Basic ${btoa(`${keyId}:${secret}`)}` },
@@ -153,7 +161,7 @@ export const createStripeCheckout = createServerFn({ method: "POST" })
     if (!secret) throw new Error("Stripe is selected, but STRIPE_SECRET_KEY is not configured on the server.");
     if (!appUrl) throw new Error("Set APP_URL in the server environment before using Stripe checkout.");
     const db = await admin();
-    const { data: gym } = await db.from("gym_settings").select("payment_gateway, currency").limit(1).maybeSingle();
+    const { data: gym } = await db.from("gym_settings").select("gym_name, payment_gateway, currency").order("updated_at", { ascending: false }).limit(1).maybeSingle();
     if (gym?.payment_gateway !== "stripe") throw new Error("Stripe is not the active payment gateway. Update Gym Settings first.");
     if (!SUPPORTED_BILLING_CURRENCIES.includes(gym.currency as typeof SUPPORTED_BILLING_CURRENCIES[number])) throw new Error("The selected billing currency is not supported by this checkout.");
     const { data: profile } = await db.from("profiles").select("onboarding_completed, display_name, email").eq("id", context.userId).single();
@@ -161,7 +169,7 @@ export const createStripeCheckout = createServerFn({ method: "POST" })
     const { data: member } = await db.from("members").select("id").eq("profile_id", context.userId).single();
     if (!member) throw new Error("Member record not found.");
     const quote = await buildQuote(db, context.userId, data.planId, data.coupon);
-    const receipt = `FRG${Date.now()}`;
+    const receipt = `${gymShortCode(gym.gym_name)}${Date.now()}`;
     const { data: payment, error: paymentError } = await db.from("payments").insert({
       member_id: member.id, plan_id: quote.planId, coupon_id: quote.couponId,
       amount: quote.total, base_amount: quote.base + quote.joiningFee, discount_amount: quote.discount,
