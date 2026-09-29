@@ -6,10 +6,10 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 export const Route = createFileRoute("/")({
   beforeLoad: () => { throw redirect({ to: "/auth" }); },
   head: () => ({ meta: [
-    { title: "Forge Fitness Pal" },
-    { name: "description", content: "Secure gym management for Forge Fitness members, coaches, and administrators." },
-    { property: "og:title", content: "Forge Fitness" },
-    { property: "og:description", content: "Train hard. Run smarter." },
+    { title: "GYM MANAGER" },
+    { name: "description", content: "Secure gym management for members, coaches, and administrators." },
+    { property: "og:title", content: "GYM MANAGER" },
+    { property: "og:description", content: "Gym management in one secure workspace." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
   ] }),

@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent, type ChangeEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Dumbbell, ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
+import { ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getGymSettings, saveGymSettings } from "@/lib/gym.functions";
 import { CURRENCIES, GYM_COUNTRIES, type CountryCode, type CurrencyCode } from "@/lib/currency";
@@ -9,7 +9,7 @@ import { CURRENCIES, GYM_COUNTRIES, type CountryCode, type CurrencyCode } from "
 const MAX_LOGO_SIZE = 2 * 1024 * 1024;
 const ACCEPTED_LOGO_TYPES = ["image/png", "image/jpeg", "image/webp"];
 const THEMES = [
-  { id: "forge-green", name: "Forge Green", color: "#8bdd20", foreground: "#17200b" },
+  { id: "forge-green", name: "Green", color: "#8bdd20", foreground: "#17200b" },
   { id: "ocean-blue", name: "Ocean Blue", color: "#2875d6", foreground: "#ffffff" },
   { id: "ember-orange", name: "Ember Orange", color: "#d88720", foreground: "#251603" },
   { id: "violet", name: "Violet", color: "#8052cf", foreground: "#ffffff" },
@@ -139,7 +139,7 @@ export function SettingsAdmin() {
         <span className="form-label">Gym logo</span>
         <div className="flex flex-wrap items-center gap-4 rounded-md border border-border bg-muted/30 p-4">
           <div className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-md border border-border bg-card">
-            {previewUrl ? <img src={previewUrl} alt="Gym logo preview" className="size-full object-contain" /> : <Dumbbell className="text-primary" size={26} />}
+            {previewUrl ? <img src={previewUrl} alt="Gym logo preview" className="size-full object-contain" /> : <span className="text-center text-[8px] font-extrabold leading-tight text-primary">GYM<br/>MANAGER</span>}
           </div>
           <div className="flex flex-wrap gap-2">
             <label className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-semibold transition-colors hover:bg-accent">

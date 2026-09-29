@@ -5,9 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [
-    { title: "Dashboard | Forge Fitness Pal" },
-    { name: "description", content: "Manage members, classes, workouts, payments, and gym access at Forge Fitness." },
-    { property: "og:title", content: "Forge Fitness Dashboard" },
+    { title: "Dashboard | GYM MANAGER" },
+    { name: "description", content: "Manage members, classes, workouts, payments, and gym access." },
+    { property: "og:title", content: "GYM MANAGER Dashboard" },
     { property: "og:description", content: "Secure gym operations for members, coaches, and administrators." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
   ]}),

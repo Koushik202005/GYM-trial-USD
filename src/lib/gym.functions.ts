@@ -282,7 +282,12 @@ export const getGymSettings = createServerFn({ method: "GET" })
       .limit(1)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return data ?? { gym_name: "Forge Functional Fitness", logo_url: null, app_title: "Forge Fitness Pal", color_theme: "forge-green", timezone: "Asia/Kolkata", currency: "INR", country_code: "IN", payment_gateway: "razorpay" };
+    if (!data) return { gym_name: "GYM MANAGER", logo_url: null, app_title: "GYM MANAGER", color_theme: "forge-green", timezone: "Asia/Kolkata", currency: "INR", country_code: "IN", payment_gateway: "razorpay" };
+    return {
+      ...data,
+      gym_name: data.gym_name === "Forge Functional Fitness" ? "GYM MANAGER" : data.gym_name,
+      app_title: data.app_title === "Forge Fitness Pal" ? "GYM MANAGER" : data.app_title,
+    };
   });
 
 // Public web-app branding only; operational settings remain behind authenticated admin flows.
@@ -296,7 +301,12 @@ export const getGymBranding = createServerFn({ method: "GET" })
       .limit(1)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return data ?? { gym_name: "Forge Functional Fitness", logo_url: null, app_title: "Forge Fitness Pal", color_theme: "forge-green", timezone: "Asia/Kolkata", currency: "INR", country_code: "IN", payment_gateway: "razorpay" };
+    if (!data) return { gym_name: "GYM MANAGER", logo_url: null, app_title: "GYM MANAGER", color_theme: "forge-green", timezone: "Asia/Kolkata", currency: "INR", country_code: "IN", payment_gateway: "razorpay" };
+    return {
+      ...data,
+      gym_name: data.gym_name === "Forge Functional Fitness" ? "GYM MANAGER" : data.gym_name,
+      app_title: data.app_title === "Forge Fitness Pal" ? "GYM MANAGER" : data.app_title,
+    };
   });
 
 export const saveGymSettings = createServerFn({ method: "POST" })

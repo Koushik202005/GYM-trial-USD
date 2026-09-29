@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bell, CalendarClock, CheckCircle2, Dumbbell, Loader2, LogOut, Receipt, RefreshCw, Tag } from "lucide-react";
+import { Bell, CalendarClock, CheckCircle2, Loader2, LogOut, Receipt, RefreshCw, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -43,7 +43,7 @@ export function MemberDashboard({ profile }: { profile: Tables<"profiles"> }) {
   const [stripeMessage, setStripeMessage] = useState("");
   const router = useRouter();
   const gymSettings = useQuery({ queryKey: ["gym-branding"], queryFn: () => loadGymSettings() });
-  const gymName = gymSettings.data?.gym_name ?? "Forge Functional Fitness";
+  const gymName = gymSettings.data?.gym_name || "GYM MANAGER";
   const current = data?.memberships.find((m) => m.status === "active") ?? data?.memberships[0];
   const daysLeft = current ? Math.ceil((new Date(current.ends_on).getTime() - Date.now()) / 86400000) : null;
   const expiringSoon = daysLeft !== null && daysLeft <= 7;
@@ -74,7 +74,7 @@ export function MemberDashboard({ profile }: { profile: Tables<"profiles"> }) {
 
   return <div className="min-h-screen bg-background">
     <header className="border-b border-border bg-sidebar text-sidebar-foreground"><div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4">
-      {gymSettings.data?.logo_url ? <img src={gymSettings.data.logo_url} alt="" className="size-9 rounded-md bg-white object-contain"/> : <span className="grid size-9 place-items-center rounded-md bg-primary text-primary-foreground"><Dumbbell size={18}/></span>}<span className="font-display text-lg font-bold uppercase">{gymName}</span>
+      {gymSettings.data?.logo_url ? <img src={gymSettings.data.logo_url} alt="" className="size-9 rounded-md bg-white object-contain"/> : <span className="grid size-9 place-items-center rounded-md bg-primary px-1 text-center text-[7px] font-extrabold leading-tight text-primary-foreground">GYM<br/>MANAGER</span>}<span className="font-display text-lg font-bold uppercase">{gymName}</span>
       <span className="ml-auto hidden text-sm sm:inline">{profile.display_name}</span>
       <Button variant="ghost" size="sm" onClick={signOut}><LogOut size={16}/> Sign out</Button>
     </div></header>

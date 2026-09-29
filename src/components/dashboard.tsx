@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Activity, Bell, CalendarDays, ChevronRight, CircleDollarSign, Clock3, CreditCard,
-  Dumbbell, Fingerprint, LayoutDashboard, LogOut, Menu, Search, Settings, ShieldCheck,
+  Fingerprint, LayoutDashboard, LogOut, Menu, Search, Settings, ShieldCheck,
   TrendingUp, UserRoundPlus, UserX, Users, WalletCards, X,
 } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -38,7 +38,7 @@ export function Dashboard({ name = "Admin" }: { name?: string }) {
   }, []);
   const loadGymSettings = useServerFn(getGymBranding);
   const gymSettings = useQuery({ queryKey: ["gym-branding"], queryFn: () => loadGymSettings() });
-  const gymName = gymSettings.data?.gym_name ?? "Forge Functional Fitness";
+  const gymName = gymSettings.data?.gym_name || "GYM MANAGER";
   const timeZone = gymSettings.data?.timezone ?? "Asia/Kolkata";
   const todayKey = gymDateKey(clock, timeZone);
   const live = useAdminDashboardData(timeZone, undefined, currency);
@@ -51,7 +51,7 @@ export function Dashboard({ name = "Admin" }: { name?: string }) {
   return <div className="min-h-screen bg-background text-foreground">
     <aside className={cn("fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-sidebar text-sidebar-foreground transition-transform lg:translate-x-0", mobileOpen ? "translate-x-0" : "-translate-x-full")}>
       <div className="flex h-20 items-center justify-between border-b border-sidebar-border px-5">
-        <div className="flex min-w-0 items-center gap-3">{gymSettings.data?.logo_url ? <img src={gymSettings.data.logo_url} alt="" className="size-10 shrink-0 rounded-md bg-white object-contain"/> : <span className="grid size-10 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground"><Dumbbell size={20}/></span>}<div className="min-w-0"><p className="truncate font-display text-lg font-bold uppercase">{gymName}</p><p className="truncate text-xs text-sidebar-muted">{gymSettings.data?.app_title ?? "Gym management"}</p></div></div>
+        <div className="flex min-w-0 items-center gap-3">{gymSettings.data?.logo_url ? <img src={gymSettings.data.logo_url} alt="" className="size-10 shrink-0 rounded-md bg-white object-contain"/> : <span className="grid size-10 shrink-0 place-items-center rounded-md bg-primary px-1 text-center text-[7px] font-extrabold leading-tight text-primary-foreground">GYM<br/>MANAGER</span>}<div className="min-w-0"><p className="truncate font-display text-lg font-bold uppercase">{gymName}</p><p className="truncate text-xs text-sidebar-muted">{gymSettings.data?.app_title || "GYM MANAGER"}</p></div></div>
         <Button aria-label="Close menu" variant="ghost" size="icon" className="lg:hidden" onClick={()=>setMobileOpen(false)}><X size={18}/></Button>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Main navigation">

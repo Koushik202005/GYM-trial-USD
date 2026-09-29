@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Dumbbell, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { completeProfile, getGymBranding } from "@/lib/gym.functions";
@@ -10,9 +10,9 @@ import { signOut } from "@/lib/sign-out";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({ meta: [
-    { title: "Complete your profile | Forge Fitness Pal" },
-    { name: "description", content: "Add your details to start training at Forge." },
-    { property: "og:title", content: "Complete your Forge profile" },
+    { title: "Complete your profile | GYM MANAGER" },
+    { name: "description", content: "Add your details to complete your gym profile." },
+    { property: "og:title", content: "Complete your profile | GYM MANAGER" },
     { property: "og:description", content: "Add your details to complete your profile." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ]}),
@@ -45,7 +45,7 @@ function Onboarding() {
   }
 
   return <main className="min-h-screen bg-auth p-5 sm:p-10"><div className="mx-auto max-w-xl">
-    <div className="mb-8 flex items-center justify-between"><span className="flex items-center gap-3">{branding?.logo_url?<img src={branding.logo_url} alt="" className="size-10 rounded-md bg-white object-contain"/>:<span className="grid size-10 place-items-center rounded-md bg-primary text-primary-foreground"><Dumbbell size={20}/></span>}<span className="font-display text-lg font-bold uppercase">{branding?.gym_name??"Forge"}</span></span><Button variant="ghost" size="sm" onClick={signOut}>Sign out</Button></div>
+    <div className="mb-8 flex items-center justify-between"><span className="flex items-center gap-3">{branding?.logo_url?<img src={branding.logo_url} alt="" className="size-10 rounded-md bg-white object-contain"/>:<span className="grid size-10 place-items-center rounded-md bg-primary px-1 text-center text-[7px] font-extrabold leading-tight text-primary-foreground">GYM<br/>MANAGER</span>}<span className="font-display text-lg font-bold uppercase">{branding?.gym_name || "GYM MANAGER"}</span></span><Button variant="ghost" size="sm" onClick={signOut}>Sign out</Button></div>
     <p className="text-xs font-bold uppercase text-primary">Profile setup</p>
     <h1 className="mt-2 font-display text-4xl font-bold uppercase">Complete your profile</h1>
     <p className="mt-2 text-sm text-muted-foreground">Add your details before choosing a membership. A phone number is optional.</p>
