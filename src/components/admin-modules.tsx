@@ -117,13 +117,27 @@ function PlanRow({ plan, currency, onSaved }: { plan: Tables<"membership_plans">
     }).eq("id", plan.id);
     setBusy(false); setMsg(error ? error.message : "Saved"); if (!error) onSaved();
   }
+  async function remove() {
+    if (!window.confirm(`Delete the membership plan “${plan.name}”? This cannot be undone.`)) return;
+    setBusy(true); setMsg("");
+    const { error } = await supabase.from("membership_plans").delete().eq("id", plan.id);
+    setBusy(false);
+    if (error) {
+      const isReferenced = error.code === "23503";
+      setMsg(isReferenced
+        ? "This plan has membership or payment history and cannot be deleted. Deactivate it instead to keep those records."
+        : error.message);
+      return;
+    }
+    onSaved();
+  }
   return <form onSubmit={save} className="grid items-end gap-3 rounded-md border border-border p-3 md:grid-cols-[1.4fr_1fr_1fr_1fr_auto_auto]">
     <label><span className="form-label">Plan</span><input name="name" defaultValue={plan.name} required className="form-input"/></label>
     <label><span className="form-label">Price ({currency})</span><input name="price" type="number" min={0} step="any" defaultValue={plan.price_amount} required className="form-input"/></label>
     <label><span className="form-label">Joining fee ({currency})</span><input name="fee" type="number" min={0} step="any" defaultValue={plan.joining_fee_amount} required className="form-input"/></label>
     <label><span className="form-label">Days</span><input name="days" type="number" min={1} defaultValue={plan.duration_days} required className="form-input"/></label>
     <label className="flex h-11 items-center gap-2 text-sm"><input name="active" type="checkbox" defaultChecked={plan.active}/> Active</label>
-    <div className="flex items-center gap-2"><Button size="sm" disabled={busy}>{busy?<Loader2 size={15} className="animate-spin"/>:"Save"}</Button>{msg&&<span className="text-xs text-muted-foreground">{msg}</span>}</div>
+    <div className="flex items-center gap-2"><Button size="sm" disabled={busy}>{busy?<Loader2 size={15} className="animate-spin"/>:"Save"}</Button><Button type="button" size="icon" variant="ghost" aria-label={`Delete ${plan.name} plan`} title="Delete plan" disabled={busy} onClick={remove}><Trash2 size={15}/></Button>{msg&&<span role="status" className="text-xs text-muted-foreground">{msg}</span>}</div>
   </form>;
 }
 
