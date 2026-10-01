@@ -903,24 +903,42 @@ export type Database = {
       }
       renewal_reminders: {
         Row: {
+          attempted_at: string | null
+          attempt_count: number
           channels: string[]
           days_before: number
           id: string
+          last_error: string | null
           membership_id: string
+          provider_message_id: string | null
+          recipient_email: string | null
           sent_at: string
+          delivery_status: string
         }
         Insert: {
+          attempted_at?: string | null
+          attempt_count?: number
           channels?: string[]
           days_before: number
+          delivery_status?: string
           id?: string
+          last_error?: string | null
           membership_id: string
+          provider_message_id?: string | null
+          recipient_email?: string | null
           sent_at?: string
         }
         Update: {
+          attempted_at?: string | null
+          attempt_count?: number
           channels?: string[]
           days_before?: number
+          delivery_status?: string
           id?: string
+          last_error?: string | null
           membership_id?: string
+          provider_message_id?: string | null
+          recipient_email?: string | null
           sent_at?: string
         }
         Relationships: [
